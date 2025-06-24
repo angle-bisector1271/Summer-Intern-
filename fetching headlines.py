@@ -140,15 +140,15 @@ def run_monthly_collection(global_start: str, global_end: str, output_csv="PSE_i
     end_dt   = datetime.fromisoformat(global_end)
     if start_dt >= end_dt:
         raise ValueError("GLOBAL_START must be before GLOBAL_END")
-    
+
     ticker = yf.Ticker(INDEX_TICKER)
     combined_records = []
     month_start = start_dt.replace(day=1)
-    
+
     while month_start < end_dt:
         next_month = month_start + relativedelta(months=1)
         month_end = next_month
-        
+
         print(f"\n=== Processing period: {month_start.date()} to {month_end.date()} ===")
         # Fetch index data for this month
         df_idx_month = fetch_index_history_month(ticker, month_start, month_end)
@@ -158,14 +158,14 @@ def run_monthly_collection(global_start: str, global_end: str, output_csv="PSE_i
             month_start = next_month
             time.sleep(SLEEP_BETWEEN_MONTHS)
             continue
-        
+
         # Fetch RSS headlines for each query in this month
         all_items = []
         for q in QUERIES:
             items = fetch_rss_headlines_for_period(q, month_start, month_end)
             all_items.extend(items)
             time.sleep(SLEEP_BETWEEN_RSS)
-        
+
         # Deduplicate by (text, date)
         df_news = pd.DataFrame(all_items)
         if df_news.empty:
@@ -175,7 +175,7 @@ def run_monthly_collection(global_start: str, global_end: str, output_csv="PSE_i
             continue
         df_news = df_news.drop_duplicates(subset=["text", "date"]).reset_index(drop=True)
         print(f"  Unique headlines collected: {len(df_news)}")
-        
+
         # Label each headline based on index data
         for idx, row in df_news.iterrows():
             pub_dt = row["date"]
@@ -200,10 +200,10 @@ def run_monthly_collection(global_start: str, global_end: str, output_csv="PSE_i
                 "label": label
             })
         print(f"  Labeled this month: {len(combined_records)} total records so far")
-        
+
         month_start = next_month
         time.sleep(SLEEP_BETWEEN_MONTHS)
-    
+
     # After loop: build DataFrame and save
     if not combined_records:
         print("No labeled records collected in entire range.")
