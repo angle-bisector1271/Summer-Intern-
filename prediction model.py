@@ -341,3 +341,4 @@ if __name__ == "__main__":
             pred_class = int(np.argmax(probs))
         class_map = {0: "Down", 1: "Neutral", 2: "Up"}
         print(f"Text: \"{sample_text}\"  → Pred: {class_map[pred_class]}, probs={probs.tolist()}")
+
